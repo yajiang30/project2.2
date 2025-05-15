@@ -31,11 +31,14 @@ int sem_destroy(sem_t sem)
 	if (!sem) {
 		return -1;
 	}
+	preempt_disable();
 	if (queue_length(sem->blocked_queue) > 0) {
+		preempt_enable();
 		return -1;
 	}
 	queue_destroy(sem->blocked_queue);
 	free(sem);
+	preempt_enable();
 	return 0;
 }
 
@@ -44,13 +47,15 @@ int sem_down(sem_t sem)
 	if (!sem) {
 		return -1;
 	}
+	preempt_disable();
 	if (sem->count > 0) {
 		sem->count--;
 	} else {
 		struct uthread_tcb *current_thread = uthread_current();
-		queue_enqueue(sem->blocked_queue, current_thread);
+		queue_enqueue(sem->blocked_queue, (void *)current_thread);
 		uthread_block();
 	}
+	preempt_enable();
 	return 0;
 }
 
@@ -60,12 +65,14 @@ int sem_up(sem_t sem)
 		return -1;
 	}
 
+	preempt_disable();
 	struct uthread_tcb *unblocked_thread;
 	if (queue_dequeue(sem->blocked_queue, (void **)&unblocked_thread) == 0) {
 		uthread_unblock(unblocked_thread);
 	} else {
 		sem->count++;
 	}
+	preempt_enable();
 	return 0;
 }
 
