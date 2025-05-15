@@ -45,12 +45,12 @@ void uthread_yield(void)
 	if (queue_dequeue(ready_queue, (void **)&next_thread) == -1) {
 		return;
 	}
-	if (!(current_thread->state == STATE_BLOCKED)) {
+	if (current_thread->state != STATE_BLOCKED) {
 		queue_enqueue(ready_queue, current_thread);
+		current_thread->state = STATE_READY;
 	}
 
 	struct uthread_tcb *prev_thread = current_thread;
-	prev_thread->state = STATE_READY;
 
 	current_thread = next_thread;
 	current_thread->state = STATE_RUNNING;
@@ -170,9 +170,13 @@ void uthread_unblock(struct uthread_tcb *uthread)
 	if (queue_delete(blocked_queue, uthread) == -1) {
 		return;
 	}
-	uthread->state = STATE_READY;
-	if (queue_enqueue(ready_queue, uthread) == -1) {
+	uthread->state = STATE_RUNNING;
+	struct uthread_tcb *prev_thread = current_thread;
+	prev_thread->state = STATE_READY;
+	if (queue_enqueue(ready_queue, prev_thread) == -1) {
 		return;
 	}
+	current_thread = uthread;
+	uthread_ctx_switch(&prev_thread->context, &current_thread->context);
 }
 

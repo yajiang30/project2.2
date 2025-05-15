@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "queue.h"
 #include "private.h"
@@ -58,14 +59,13 @@ int sem_up(sem_t sem)
 	if (!sem) {
 		return -1;
 	}
-	if (queue_length(sem->blocked_queue) > 0) {
-		struct uthread_tcb *unblocked_thread;
-		if (queue_dequeue(sem->blocked_queue, (void **)&unblocked_thread) == -1) {
-			return -1;
-		}
+
+	struct uthread_tcb *unblocked_thread;
+	if (queue_dequeue(sem->blocked_queue, (void **)&unblocked_thread) == 0) {
 		uthread_unblock(unblocked_thread);
+	} else {
+		sem->count++;
 	}
-	sem->count++;
 	return 0;
 }
 

@@ -16,7 +16,7 @@
 #include <sem.h>
 #include <uthread.h>
 
-#define MAXPRIME 1000
+#define MAXPRIME 3
 
 struct channel {
 	int value;
