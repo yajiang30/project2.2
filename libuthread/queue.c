@@ -1,4 +1,4 @@
- #include <stdint.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,7 +9,7 @@ typedef struct node* node_t;
 struct node {
 	void* data;
 	node_t prev;
-    node_t next;
+	node_t next;
 };
 
 node_t create_node(void* data) {
@@ -155,7 +155,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-	if (queue == NULL) {
+	if (!queue) {
 		return -1;
 	}
 	return queue->len;
